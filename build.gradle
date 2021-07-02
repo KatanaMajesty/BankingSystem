@@ -1,0 +1,30 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group 'com.katanamajesty'
+version '1.0-barebones'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+application {
+    mainClassName("com.katanamajesty.banksystem.BankingSystem")
+}
+
+jar {
+    manifest {
+        attributes("Main-Class": "com.katanamajesty.banksystem.BankingSystem")
+    }
+}
