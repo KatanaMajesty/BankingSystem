@@ -1,7 +1,9 @@
 package com.katanamajesty.banksystem;
 
 import com.katanamajesty.banksystem.account.AccountActions;
+import com.katanamajesty.banksystem.bank.CardDatabase;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
@@ -12,11 +14,13 @@ public class BankingSystem {
     static boolean loggedIn = false;
     static boolean terminated = false;
 
+    public static String dataBaseName = "bankcard.db";
+
     static final ArrayList<String> CARD_NUMBER_DATA = new ArrayList<>();
     static final ArrayList<String> CARD_PIN_DATA = new ArrayList<>();
-    int userNum = 0;
-    String cardNumber;
-    String cardPin;
+    static int userNum = 0;
+    static String cardNumber;
+    static String cardPin;
 
     public static void menuOptions() {
 
@@ -40,7 +44,16 @@ public class BankingSystem {
     }
 
     public static void main(String[] args) {
+        // определяет имя бд, если оно отличается от дефолтного
+        if (args.length >= 2 && "-fileName".equals(args[0])) {
+            dataBaseName = args[1];
+        }
 
+        // начинает подключение к бд
+        CardDatabase cardDatabase = new CardDatabase(dataBaseName);
+        cardDatabase.establishConnection();
+
+        // запускает начальное меню для пользователя и зацикливает его
         while (!terminated) {
             menuOptions();
             BankingSystem bankingSystem = new BankingSystem();
@@ -120,6 +133,10 @@ public class BankingSystem {
         CARD_NUMBER_DATA.add(userNum, cardNumber);
         CARD_PIN_DATA.add(userNum, cardPin);
         userNum++;
+
+        // вносит данные о карточке в базу данных
+        CardDatabase cardDatabase = new CardDatabase(dataBaseName);
+        cardDatabase.insertValues(new Object[]{userNum, cardNumber, cardPin, AccountActions.getUserBalance()});
 
     }
 

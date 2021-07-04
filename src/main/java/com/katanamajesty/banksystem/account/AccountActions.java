@@ -10,4 +10,10 @@ public class AccountActions {
 
     }
 
+    public static Integer getUserBalance() {
+
+        return userBalance;
+
+    }
+
 }
