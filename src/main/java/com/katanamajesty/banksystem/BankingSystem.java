@@ -9,7 +9,7 @@ import java.util.Scanner;
 public class BankingSystem {
 
     static final Scanner SCANNER = new Scanner(System.in);
-    static boolean loggedIn;
+    static boolean loggedIn = false;
     static boolean terminated = false;
 
     static final ArrayList<String> CARD_NUMBER_DATA = new ArrayList<>();
@@ -69,28 +69,54 @@ public class BankingSystem {
     public void cardCreation() {
 
         Random random = new Random();
+        String accountIdentifier = "";
         cardNumber = "400000";
         cardPin = "";
+
+        for (int i = 0; i < 9; i++) {
+            int num = random.nextInt(10);
+            accountIdentifier = accountIdentifier.concat(String.valueOf(num));
+            // создаёт номер карточки из 16 значений
+        }
 
         for (int i = 0; i < 4; i++) {
             cardPin = cardPin.concat(String.valueOf(random.nextInt(10)));
             // создаёт рандомный пин для карточки
         }
 
-        for (int i = 0; i < 10; i++) {
-            int num = random.nextInt(10);
-            cardNumber = cardNumber.concat(String.valueOf(num));
-            // создаёт номер карточки из 16 значений
+        // алгоритм Луна
+        cardNumber = cardNumber.concat(accountIdentifier);
+        char[] intChars = cardNumber.toCharArray();
+        int checksum = 0;
+        int cardNumSum = 0;
+        int cardNum;
+        for (int i = 0; i < intChars.length; i++) {
+            // умножает числа нечётного номера цифры на карточке на 2
+            cardNum = Integer.parseInt(Character.toString(intChars[i]));
+            if (i % 2 == 0) {
+                cardNum = cardNum * 2;
+            }
+            // отнимает 9 от чисел > 9
+            if (cardNum > 9) {
+                cardNum -= 9;
+            }
+            cardNumSum += cardNum;
         }
+        while ((cardNumSum + checksum) % 10 != 0) {
+            checksum++;
+        }
+        String checksumString = Integer.toString(checksum);
+        cardNumber = cardNumber.concat(checksumString);
 
+        // вывод данных о карточке
         System.out.println();
         System.out.println("Your card has been created");
         System.out.println("Your card number:");
         System.out.println(cardNumber);
         System.out.println("Your card PIN:");
         System.out.println(cardPin + "\n");
-        // возвращает данные о новой карточке
 
+        // заносит данные о карточке в листы
         CARD_NUMBER_DATA.add(userNum, cardNumber);
         CARD_PIN_DATA.add(userNum, cardPin);
         userNum++;
@@ -140,7 +166,7 @@ public class BankingSystem {
     public void loggingOut() {
 
         loggedIn = false;
-        System.out.println("You have successfully logged out!");
+        System.out.println("\nYou have successfully logged out!\n");
 
     }
 
