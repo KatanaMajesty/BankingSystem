@@ -3,21 +3,18 @@ package com.katanamajesty.banksystem;
 import com.katanamajesty.banksystem.account.AccountActions;
 import com.katanamajesty.banksystem.bank.CardDatabase;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
 
 public class BankingSystem {
 
-    static final Scanner SCANNER = new Scanner(System.in);
+    private static final Scanner SCANNER = new Scanner(System.in);
     static boolean loggedIn = false;
     static boolean terminated = false;
 
     public static String dataBaseName = "bankcard.db";
+    public static CardDatabase cardDatabase = new CardDatabase(dataBaseName);
 
-    static final ArrayList<String> CARD_NUMBER_DATA = new ArrayList<>();
-    static final ArrayList<String> CARD_PIN_DATA = new ArrayList<>();
     static int userNum = 0;
     static String cardNumber;
     static String cardPin;
@@ -26,20 +23,34 @@ public class BankingSystem {
 
         String firstOption;
         String secondOption;
+        String thirdOption;
+        String fourthOption;
+        String fifthOption;
+
         final String EXIT_OPTION = "0. Exit";
 
         if (loggedIn) { // проверяет, вошёл ли пользователь в систему
 
             firstOption = "1. Balance";
-            secondOption = "2. Log out";
+            secondOption = "2. Add income";
+            thirdOption = "3. Do transfer";
+            fourthOption = "4. Close account";
+            fifthOption = "5. Log out";
+            System.out.println(firstOption + System.lineSeparator() +
+                    secondOption + System.lineSeparator() +
+                    thirdOption + System.lineSeparator() +
+                    fourthOption + System.lineSeparator() +
+                    fifthOption + System.lineSeparator());
 
         } else { // предлагает войти в систему, если loggedIn = false
 
             firstOption = "1. Create an account";
             secondOption = "2. Log into account";
+            System.out.println(firstOption + System.lineSeparator() +
+                    secondOption + System.lineSeparator() +
+                    EXIT_OPTION);
 
         }
-        System.out.println(firstOption + "\n" + secondOption + "\n" + EXIT_OPTION);
 
     }
 
@@ -47,10 +58,10 @@ public class BankingSystem {
         // определяет имя бд, если оно отличается от дефолтного
         if (args.length >= 2 && "-fileName".equals(args[0])) {
             dataBaseName = args[1];
+            cardDatabase = new CardDatabase(dataBaseName);
         }
 
         // начинает подключение к бд
-        CardDatabase cardDatabase = new CardDatabase(dataBaseName);
         cardDatabase.establishConnection();
 
         // запускает начальное меню для пользователя и зацикливает его
@@ -129,14 +140,9 @@ public class BankingSystem {
         System.out.println("Your card PIN:");
         System.out.println(cardPin + "\n");
 
-        // заносит данные о карточке в листы
-        CARD_NUMBER_DATA.add(userNum, cardNumber);
-        CARD_PIN_DATA.add(userNum, cardPin);
-        userNum++;
-
         // вносит данные о карточке в базу данных
-        CardDatabase cardDatabase = new CardDatabase(dataBaseName);
-        cardDatabase.insertValues(new Object[]{userNum, cardNumber, cardPin, AccountActions.getUserBalance()});
+        userNum++;
+        cardDatabase.insertValues(new Object[]{userNum, cardNumber, cardPin});
 
     }
 
@@ -150,7 +156,11 @@ public class BankingSystem {
         String userCardPin = SCANNER.nextLine(); // key
         // принимает пин-код карточки
 
-        if (CARD_NUMBER_DATA.contains(userCardNumber) && CARD_NUMBER_DATA.indexOf(userCardNumber) == CARD_PIN_DATA.indexOf(userCardPin)) {
+        String query = "SELECT * FROM card " +
+                "WHERE number = " + userCardNumber +
+                " AND pin = " + userCardPin;
+
+        if (!cardDatabase.getCardInfo(query).isEmpty()) {
 
             loggedIn = true;
 
@@ -160,9 +170,19 @@ public class BankingSystem {
                 menuOptions();
                 switch (Integer.parseInt(SCANNER.nextLine())) {
                     case 1:
-                        AccountActions.balance();
-                        continue;
+                        AccountActions.balance(cardNumber);
+                        break;
                     case 2:
+                        AccountActions.addIncome();
+                        break;
+                    case 3:
+                        System.out.println("bababooey");
+                        break;
+                    case 4:
+                        AccountActions.closeAccount(userCardNumber, userCardPin);
+                        loggedIn = false;
+                        break;
+                    case 5:
                         loggingOut();
                         break;
                     case 0:
