@@ -6,19 +6,29 @@ import com.katanamajesty.banksystem.bank.CardDatabase;
 import java.util.Random;
 import java.util.Scanner;
 
+
+/**
+ * Основной класс банковской системы
+ */
 public class BankingSystem {
 
     private static final Scanner SCANNER = new Scanner(System.in);
-    static boolean loggedIn = false;
-    static boolean terminated = false;
+    private static boolean loggedIn = false;
+    private static boolean terminated = false;
 
     public static String dataBaseName = "bankcard.db";
     public static CardDatabase cardDatabase = new CardDatabase(dataBaseName);
 
-    static int userNum = 0;
-    static String cardNumber;
-    static String cardPin;
+    @SuppressWarnings("all")
+    private static String cardPin;
+    private static int userNum = 0;
 
+    /**
+     * Меню-панель
+     * Проверяет boolean loggedIn
+     * и выводит в консоль меню
+     * в зависимости от его значения
+     */
     public static void menuOptions() {
 
         String firstOption;
@@ -29,7 +39,8 @@ public class BankingSystem {
 
         final String EXIT_OPTION = "0. Exit";
 
-        if (loggedIn) { // проверяет, вошёл ли пользователь в систему
+        // проверяет, вошёл ли пользователь в систему
+        if (loggedIn) {
 
             firstOption = "1. Balance";
             secondOption = "2. Add income";
@@ -40,9 +51,10 @@ public class BankingSystem {
                     secondOption + System.lineSeparator() +
                     thirdOption + System.lineSeparator() +
                     fourthOption + System.lineSeparator() +
-                    fifthOption + System.lineSeparator());
+                    fifthOption);
 
-        } else { // предлагает войти в систему, если loggedIn = false
+        // предлагает войти в систему, если loggedIn = false
+        } else {
 
             firstOption = "1. Create an account";
             secondOption = "2. Log into account";
@@ -54,9 +66,17 @@ public class BankingSystem {
 
     }
 
+    /**
+     * Главный класс
+     *
+     * @param args      Принимает 2 значения.
+     *                  Если первый аргумент = -fileName,
+     *                  то название бд будет соответствовать
+     *                  второму аргументу
+     */
     public static void main(String[] args) {
         // определяет имя бд, если оно отличается от дефолтного
-        if (args.length >= 2 && "-fileName".equals(args[0])) {
+        if (args.length == 2 && "-fileName".equals(args[0])) {
             dataBaseName = args[1];
             cardDatabase = new CardDatabase(dataBaseName);
         }
@@ -73,6 +93,15 @@ public class BankingSystem {
 
     }
 
+    /**
+     * Главное меню при запуске программы.
+     * Предлагает создание акканута, вход в существующий
+     * и выход
+     *
+     * @param input     параметр получает Integer,
+     *                  который передаётся в Switch и определяет
+     *                  выбор пользователя в главном меню
+     */
     public void application(Integer input) {
 
         switch (input) {
@@ -90,22 +119,27 @@ public class BankingSystem {
 
     }
 
+    /**
+     * Генератор банковской карточки
+     * Генерирует рандомный номер карточки, учитывая алгоритм Луна
+     * и рандомный пин. Вносит данные в базу данных
+     */
     public void cardCreation() {
 
         Random random = new Random();
         String accountIdentifier = "";
-        cardNumber = "400000";
+        String cardNumber = "400000";
         cardPin = "";
 
+        // создаёт номер карточки из 16 значений
         for (int i = 0; i < 9; i++) {
             int num = random.nextInt(10);
             accountIdentifier = accountIdentifier.concat(String.valueOf(num));
-            // создаёт номер карточки из 16 значений
         }
 
+        // создаёт рандомный пин для карточки
         for (int i = 0; i < 4; i++) {
             cardPin = cardPin.concat(String.valueOf(random.nextInt(10)));
-            // создаёт рандомный пин для карточки
         }
 
         // алгоритм Луна
@@ -146,46 +180,58 @@ public class BankingSystem {
 
     }
 
+    /**
+     * Метод входа в аккаунт
+     */
     public void loggingIn() {
+        CardDatabase cardDatabase = new CardDatabase(dataBaseName);
+        Scanner scanner = new Scanner(System.in);
 
-        System.out.println("\nEnter your card number:");
-        String userCardNumber = SCANNER.nextLine(); // value
         // принимает номер карточки
+        System.out.println("\nEnter your card number:");
+        String userCardNumber = scanner.nextLine();
 
-        System.out.println("Enter your PIN:");
-        String userCardPin = SCANNER.nextLine(); // key
         // принимает пин-код карточки
+        System.out.println("Enter your PIN:");
+        String userCardPin = scanner.nextLine();
 
+        // Создаёт запрос для бд для проверки на наличие указанных выше данных в ней
         String query = "SELECT * FROM card " +
                 "WHERE number = " + userCardNumber +
                 " AND pin = " + userCardPin;
 
+        // обработка результата запроса
         if (!cardDatabase.getCardInfo(query).isEmpty()) {
 
             loggedIn = true;
 
             System.out.println("\nYou have successfully logged in!\n");
-
             while (loggedIn) { // блок меню для авторизованного пользователя
                 menuOptions();
-                switch (Integer.parseInt(SCANNER.nextLine())) {
+                switch (Integer.parseInt(scanner.nextLine())) {
                     case 1:
-                        AccountActions.balance(cardNumber);
+                        // проверка баланса
+                        AccountActions.balance(userCardNumber);
                         break;
                     case 2:
-                        AccountActions.addIncome();
+                        // добавление баланса
+                        AccountActions.addIncome(userCardNumber);
                         break;
                     case 3:
-                        System.out.println("bababooey");
+                        // перевод на другую карточку
+                        AccountActions.transferAction(userCardNumber);
                         break;
                     case 4:
+                        // удаление аккаунта
                         AccountActions.closeAccount(userCardNumber, userCardPin);
                         loggedIn = false;
                         break;
                     case 5:
+                        // выход из аккаунта
                         loggingOut();
                         break;
                     case 0:
+                        // выход из программы
                         System.out.println("\nBye!");
                         terminated = true;
                         loggedIn = false;
@@ -193,15 +239,19 @@ public class BankingSystem {
                 }
             }
 
-
         } else {
             System.out.println("\nWrong card number or PIN!\n");
         }
 
     }
 
+    /**
+     * Выход из аккаунта.
+     * Доступен только если loggedIn = true
+     */
     public void loggingOut() {
 
+        // Прерывает цикл
         loggedIn = false;
         System.out.println("\nYou have successfully logged out!\n");
 
