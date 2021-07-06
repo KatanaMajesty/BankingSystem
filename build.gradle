@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'com.katanamajesty'
-version '1.0-barebones'
+version '1.1-finish'
 
 repositories {
     mavenCentral()
